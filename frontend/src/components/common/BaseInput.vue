@@ -1,105 +1,145 @@
 <template>
-  <button
-    :type="type"
-    :disabled="disabled || loading"
-    :class="[
-      'inline-flex items-center justify-center px-4 py-2 rounded-md font-medium transition-all duration-200',
-      disabled || loading ? 'opacity-50 cursor-not-allowed' : 'hover:shadow-md',
-      variant === 'primary' ? 'bg-black text-white hover:bg-gray-800 focus:ring-2 focus:ring-black focus:ring-offset-2' :
-      variant === 'secondary' ? 'bg-white text-black border border-black hover:bg-gray-100 focus:ring-2 focus:ring-black focus:ring-offset-2' :
-      variant === 'outline' ? 'border border-black text-black hover:bg-gray-100 focus:ring-2 focus:ring-black focus:ring-offset-2' :
-      'bg-gray-200 text-black hover:bg-gray-300 focus:ring-2 focus:ring-black focus:ring-offset-2',
-      size === 'sm' ? 'text-sm px-3 py-1' : size === 'lg' ? 'text-base px-6 py-3' : 'text-base px-4 py-2',
-      block ? 'w-full' : ''
-    ]"
-    @click="handleClick"
-  >
-    <div class="flex items-center justify-center space-x-2">
-      <div v-if="loading" class="animate-spin h-5 w-5 border-2 border-t-black rounded-full"></div>
-      <slot v-else name="icon" />
-      <span v-if="$slots.default || text">{{ text }}</span>
-      <slot />
+  <div class="w-full">
+    <label v-if="label" :for="inputId" class="block text-sm font-medium text-black mb-1">
+      {{ label }}
+      <span v-if="required" class="text-red-500 ml-1">*</span>
+    </label>
+
+    <div class="relative">
+      <input
+        :id="inputId"
+        :type="type"
+        :value="modelValue"
+        :placeholder="placeholder"
+        :disabled="disabled"
+        :readonly="readonly"
+        :required="required"
+        :class="[
+          'w-full px-4 py-2 text-gray-700 bg-white border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-black focus:border-black transition-all duration-200',
+          $slots.icon ? 'pl-10' : '',
+          $slots.right ? 'pr-10' : '',
+          disabled ? 'opacity-50 cursor-not-allowed' : '',
+          error ? 'border-red-300 focus:ring-red-500 focus:border-red-500' : ''
+        ]"
+        @input="handleInput"
+        @blur="handleBlur"
+        @focus="handleFocus"
+      >
+
+      <!-- Icon Slot -->
+      <div v-if="$slots.icon" class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+        <slot name="icon" />
+      </div>
+
+      <!-- Right Side Content (e.g., clear button, validation icon) -->
+      <div v-if="$slots.right" class="absolute inset-y-0 right-0 pr-3 flex items-center">
+        <slot name="right" />
+      </div>
     </div>
-  </button>
+
+    <!-- Help Text -->
+    <p v-if="helpText && !error" class="mt-1 text-sm text-gray-500">
+      {{ helpText }}
+    </p>
+
+    <!-- Error Message -->
+    <p v-if="error" class="mt-1 text-sm text-red-600">
+      {{ error }}
+    </p>
+  </div>
 </template>
 
 <script>
-import { computed } from 'vue'
+import { computed, ref } from 'vue'
 
 export default {
-  name: 'BaseButton',
+  name: 'BaseInput',
   props: {
-    variant: {
-      type: String,
-      default: 'primary',
-      validator: (value) => ['primary', 'secondary', 'outline', 'ghost', 'danger'].includes(value)
-    },
-    size: {
-      type: String,
-      default: 'md',
-      validator: (value) => ['sm', 'md', 'lg'].includes(value)
+    modelValue: {
+      type: [String, Number],
+      default: ''
     },
     type: {
       type: String,
-      default: 'button'
+      default: 'text'
+    },
+    label: {
+      type: String,
+      default: ''
+    },
+    placeholder: {
+      type: String,
+      default: ''
+    },
+    helpText: {
+      type: String,
+      default: ''
+    },
+    error: {
+      type: String,
+      default: ''
     },
     disabled: {
       type: Boolean,
       default: false
     },
-    loading: {
+    readonly: {
       type: Boolean,
       default: false
     },
-    text: {
+    required: {
+      type: Boolean,
+      default: false
+    },
+    size: {
       type: String,
-      default: ''
-    },
-    block: {
-      type: Boolean,
-      default: false
+      default: 'md',
+      validator: (value) => ['sm', 'md', 'lg'].includes(value)
     }
   },
-  emits: ['click'],
+  emits: ['update:modelValue', 'blur', 'focus'],
   setup(props, { emit }) {
-    const buttonClasses = computed(() => {
-      const baseClasses = 'inline-flex items-center justify-center font-medium rounded-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2'
+    const inputId = ref(`input-${Math.random().toString(36).substr(2, 9)}`)
 
-      const variantClasses = {
-        primary: 'bg-gray-900 text-white hover:bg-gray-800 focus:ring-gray-900 disabled:bg-gray-400',
-        secondary: 'bg-gray-100 text-gray-900 hover:bg-gray-200 focus:ring-gray-500 disabled:bg-gray-100 disabled:text-gray-400',
-        outline: 'border border-gray-900 text-gray-900 hover:bg-gray-900 hover:text-white focus:ring-gray-900 disabled:border-gray-300 disabled:text-gray-300',
-        ghost: 'text-gray-900 hover:bg-gray-100 focus:ring-gray-500 disabled:text-gray-400',
-        danger: 'bg-red-600 text-white hover:bg-red-700 focus:ring-red-600 disabled:bg-red-400'
-      }
-
+    const inputClasses = computed(() => {
+      const baseClasses = 'form-input'
       const sizeClasses = {
         sm: 'px-3 py-2 text-sm',
-        md: 'px-4 py-2',
-        lg: 'px-6 py-3 text-lg'
+        md: 'px-4 py-3',
+        lg: 'px-4 py-4 text-lg'
       }
 
-      const widthClass = props.block ? 'w-full' : ''
-      const disabledClass = (props.disabled || props.loading) ? 'cursor-not-allowed opacity-60' : 'cursor-pointer'
+      const iconPadding = props.$slots?.icon ? 'pl-10' : ''
+      const errorClasses = props.error ? 'border-red-300 focus:ring-red-500 focus:border-red-500' : ''
+      const disabledClasses = props.disabled ? 'bg-gray-100 cursor-not-allowed' : ''
 
       return [
         baseClasses,
-        variantClasses[props.variant],
         sizeClasses[props.size],
-        widthClass,
-        disabledClass
-      ].join(' ')
+        iconPadding,
+        errorClasses,
+        disabledClasses
+      ].filter(Boolean).join(' ')
     })
 
-    const handleClick = (event) => {
-      if (!props.disabled && !props.loading) {
-        emit('click', event)
-      }
+    const handleInput = (event) => {
+      emit('update:modelValue', event.target.value)
+    }
+
+    const handleBlur = (event) => {
+      emit('blur', event)
+    }
+
+    const handleFocus = (event) => {
+      emit('focus', event)
     }
 
     return {
-      buttonClasses,
-      handleClick
+      inputId,
+      inputClasses,
+      handleInput,
+      handleBlur,
+      handleFocus
     }
   }
 }

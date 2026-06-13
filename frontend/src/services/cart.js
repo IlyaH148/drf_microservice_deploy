@@ -1,3 +1,4 @@
+// frontend/src/services/cart.js
 import api from './api'
 
 const cartService = {

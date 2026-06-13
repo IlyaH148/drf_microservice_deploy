@@ -1,3 +1,4 @@
+// frontend/src/store/cart.js
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 import cartService from '../services/cart.js'

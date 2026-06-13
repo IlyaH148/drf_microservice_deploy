@@ -34,7 +34,6 @@ class JWTAuthenticationMiddleware:
                 request.user_id = user_data['id']
                 request.user_email = user_data['email']
                 logger.info(f"Authenticated user {user_data['id']} for {request.path}")
-
                 response = self.get_response(request)
                 return response
             else:

@@ -1,4 +1,5 @@
 from django.shortcuts import render
+from rest_framework.views import APIView
 from rest_framework import generics, status
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated, AllowAny
@@ -14,13 +15,18 @@ class RegisterView(generics.CreateAPIView):
     permission_classes =[]
 
 
-class ProfileView(generics.RetrieveUpdateAPIView):
-    queryset = User.objects.all()
-    serializer_class = UserProfileSerializer
-    permission_classes =[IsAuthenticated]
+class ProfileView(APIView):
+    permission_classes = [IsAuthenticated]
 
-    def get_object(self):
-        return self.request.user 
+    def get(self, request):
+        user = request.user  # Django уже аутентифицировал по токену
+        return Response({
+            'id': user.id,
+            'email': user.email,
+            'first_name': user.first_name,
+            'username': user.username,
+            'last_name': user.last_name,
+        })
     
 
 class ProfileUpdateView(generics.UpdateAPIView):

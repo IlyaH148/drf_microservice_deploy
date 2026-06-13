@@ -11,9 +11,9 @@ from .serializers import (
 
 class CategoryListView(generics.ListCreateAPIView):
     queryset = Category.objects.all()
-    serializers_class = CategorySerializer
+    serializer_class = CategorySerializer
     filter_backends =[filters.SearchFilter]
-    search_filters = ['name' , 'description']
+    search_filters = ['name', 'description']
 
 class CategoryDetailView(generics.RetrieveUpdateDestroyAPIView):
     queryset = Category.objects.all()
@@ -50,10 +50,10 @@ class ProductListView(generics.ListCreateAPIView):
 
         return queryset
     
-        def get_serializer_class(self):
-            if self.request.method == 'POST':
-                return ProductCreateUpdateSerializer
-            return ProductSerializer
+    def get_serializer_class(self):
+        if self.request.method == 'POST':
+            return ProductCreateUpdateSerializer
+        return ProductSerializer
 
 
 class ProductDetailView(generics.RetrieveUpdateDestroyAPIView):
@@ -65,31 +65,71 @@ class ProductDetailView(generics.RetrieveUpdateDestroyAPIView):
         return ProductSerializer
     
 
+from rest_framework import status
+from rest_framework.decorators import api_view
+from rest_framework.response import Response
+from .models import Product
+
 @api_view(['POST'])
 def reserve_product(request, product_id):
     try:
-        product = Product.objects.all()
-        quantity = request.data.get('quantity',1)
-
-        if product.reserve_quantity(quantity):
-            return Response(
-                {'success':True,
-                'message': f'Reserved{quantity} units of {product.name}',
-                'remaining_stock': product.stock_quantity}
-                )
-        else:
-            return Response({
-                'success':True,
-                'message':'Insufficient stock',
-                'available_stock': product.stock_quantity
-        
-            },status=status.HTTP_400_BAD_REQUEST)
+        product = Product.objects.get(id=product_id)
     except Product.DoesNotExist:
-        return Response({
-                'success':False,
-                'message':'Product not found'
+        return Response(
+            {'success': False, 'message': 'Product not found'},
+            status=status.HTTP_404_NOT_FOUND
+        )
         
-            },status=status.HTTP_404_NOT_FOUND)
+    raw_quantity = request.data.get('quantity')
+
+    if raw_quantity is None:
+        return Response(
+            {'success': False, 'message': 'Field "quantity" is required'},
+            status=status.HTTP_400_BAD_REQUEST
+        )
+
+    try:
+        quantity = int(raw_quantity)
+        if quantity <= 0:
+            raise ValueError("Quantity must be a positive integer")
+    except (TypeError, ValueError):
+        return Response(
+            {
+                'success': False,
+                'message': 'Invalid "quantity": must be a positive integer',
+                'received': raw_quantity
+            },
+            status=status.HTTP_400_BAD_REQUEST
+        )
+
+    try:
+        reserved = product.reserve_quantity(quantity)
+    except Exception as e:
+        return Response(
+            {
+                'success': False,
+                'message': 'Failed to reserve product due to an internal error',
+                'details': str(e)
+            },
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR
+        )
+
+    if not reserved:
+        return Response(
+            {
+                'success': False,
+                'message': 'Insufficient stock',
+                'available_stock': product.stock_quantity,
+                'requested_quantity': quantity
+            },
+            status=status.HTTP_400_BAD_REQUEST
+        )
+
+    return Response({
+        'success': True,
+        'message': f'Reserved {quantity} units of {product.name}',
+        'remaining_stock': product.stock_quantity
+    })
     
 @api_view(['POST'])
 def release_product(request, product_id):

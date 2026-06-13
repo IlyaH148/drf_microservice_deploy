@@ -1,3 +1,4 @@
+<!-- frontend/src/views/HomeView.vue -->
 <template>
   <div class="min-h-screen">
     <!-- Hero Section -->

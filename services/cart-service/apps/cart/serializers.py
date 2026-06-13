@@ -40,7 +40,7 @@ class CartSerializer(serializers.ModelSerializer):
             'total_items','created_at' , 'updated_at'
         ]
 
-class AddToCartSerializer(serializers.ModelSerializer):
+class AddToCartSerializer(serializers.Serializer):
     product_id = serializers.IntegerField()
     quantity = serializers.IntegerField(min_value = 1, default = 1)
 
@@ -52,6 +52,6 @@ class AddToCartSerializer(serializers.ModelSerializer):
         if not product_data.get('is_active'):
             raise serializers.ValidationError('Product is not active')
         return value
-    
+
 class UpdateCartItemSerializer(serializers.Serializer):
     quantity = serializers.IntegerField(min_value = 1)

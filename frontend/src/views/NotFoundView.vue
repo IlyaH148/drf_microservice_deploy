@@ -1,3 +1,4 @@
+<!-- src/views/NotFoundView.vue -->
 <template>
   <div class="min-h-screen flex items-center justify-center bg-gray-50">
     <div class="text-center bg-white rounded-xl shadow-sm p-8 border border-gray-100">

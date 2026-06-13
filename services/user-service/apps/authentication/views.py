@@ -50,7 +50,7 @@ def refresh_token(request):
             return Response(
                 {'error':'Refresh token is required'},
                             status = status.HTTP_400_BAD_REQUEST)
-        refrest = RefreshToken(refresh_token)
+        refresh = RefreshToken(refresh_token)
         return Response({
                 'access':str(refresh.access_token),
                 })

@@ -1,3 +1,4 @@
+<!-- frontend/src/components/auth/RegisterForm.vue -->
 <template>
   <div class="bg-white max-w-md mx-auto p-6 rounded-xl shadow-lg border border-gray-200">
     <div class="mb-6">

@@ -1,3 +1,4 @@
+// frontend/src/store/auth.js
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 import authService from '../services/auth.js'

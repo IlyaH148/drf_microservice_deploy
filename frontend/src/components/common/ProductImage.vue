@@ -1,3 +1,4 @@
+<!-- frontend/src/components/common/ProductImage.vue -->
 <template>
   <div
     :class="[
