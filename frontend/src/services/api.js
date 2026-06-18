@@ -4,10 +4,11 @@ import { useAuthStore } from '../store/auth';
 
 // Create axios instance
 const api = axios.create({
-  baseURL: 'http://localhost:8000/api/',
+  baseURL: 'https://drf-shop-api.loca.lt/api/',
   timeout: 30000,
   headers: {
-    'Content-Type': 'application/json'
+    'Content-Type': 'application/json',
+    'Bypass-Tunnel-Reminder': 'true'
   }
 })
 
