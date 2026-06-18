@@ -4,7 +4,7 @@ from pathlib import Path
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-SECRET_KEY = 'order-service-secret-key-change-in-production'
+SECRET_KEY = 'django-insecure-hsgni0ElA882d24d3RDOU6h-8OiAnsWItDG0Fxz-1wI'
 DEBUG = True
 ALLOWED_HOSTS = ['localhost', '127.0.0.1', '0.0.0.0']
 
