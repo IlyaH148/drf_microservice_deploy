@@ -11,7 +11,7 @@ from .serializers import (
 )
 from .services import CartService, ProductService, UserService, event_bus
 import logging
-
+from decimal import Decimal
 logger = logging.getLogger(__name__)
 
 class IsAuthenticatedCustom:
@@ -40,125 +40,98 @@ class OrderDetailView(generics.RetrieveAPIView):
 @api_view(['POST'])
 @permission_classes([IsAuthenticatedCustom])
 def create_order(request):
-    """Создание заказа из корзины"""
     logger.info(f"Creating order for user {request.user_id} with data: {request.data}")
 
-    # Извлекаем данные из запроса
     shipping_address = request.data.get('shipping_address', '')
     customer_info = request.data.get('customer_info', {})
     special_instructions = request.data.get('special_instructions', '')
 
     if not shipping_address:
-        return Response({
-            'error': 'Shipping address is required'
-        }, status=status.HTTP_400_BAD_REQUEST)
+        return Response(
+            {'error': 'Shipping address is required'},
+            status=status.HTTP_400_BAD_REQUEST
+        )
 
     user_id = request.user_id
 
     try:
+        token = request.headers.get('Authorization', '').replace('Bearer ', '')
+
+        cart_data = CartService.get_user_cart(user_id, token)
+
+        if not cart_data or not cart_data.get('items'):
+            return Response(
+                {'error': 'Cart is empty'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        logger.info(f"Cart items: {len(cart_data['items'])}")
+
+        user_data = UserService.get_user_from_token(token)
+        if not user_data:
+            return Response(
+                {'error': 'User not found'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
         with transaction.atomic():
-            # Получаем корзину пользователя
-            token = request.headers.get('Authorization', '').replace('Bearer ', '')
-            cart_data = CartService.get_user_cart(user_id, token)
 
-            if not cart_data or not cart_data.get('items'):
-                return Response({
-                    'error': 'Cart is empty'
-                }, status=status.HTTP_400_BAD_REQUEST)
+            user_name = ''
+            if customer_info:
+                user_name = f"{customer_info.get('first_name', '')} {customer_info.get('last_name', '')}".strip()
 
-            logger.info(f"Cart data for user {user_id}: {len(cart_data['items'])} items")
+            if not user_name:
+                user_name = f"{user_data.get('first_name', '')} {user_data.get('last_name', '')}".strip()
 
-            # Получаем информацию о пользователе
-            user_data = UserService.get_user_from_token(token)
-            if not user_data:
-                return Response({
-                    'error': 'User not found'
-                }, status=status.HTTP_400_BAD_REQUEST)
+            order = Order.objects.create(
+                user_id=user_id,
+                shipping_address=shipping_address,
+                user_email=customer_info.get('email') or user_data.get('email', ''),
+                user_name=user_name,
+                total_amount = sum(
+                Decimal(str(item['price'])) * int(item['quantity'])
+                for item in cart_data['items']
+                )
+            )
 
-            # Подготавливаем данные для резервирования
-            items_to_reserve = []
-            for cart_item in cart_data['items']:
-                items_to_reserve.append({
-                    'product_id': cart_item['product_id'],
-                    'quantity': cart_item['quantity']
-                })
+            order_items = []
 
-            # Резервируем товары
-            logger.info(f"Reserving products: {items_to_reserve}")
-            if not ProductService.reserve_products(items_to_reserve):
-                return Response({
-                    'error': 'Failed to reserve products. Some items may be out of stock.'
-                }, status=status.HTTP_400_BAD_REQUEST)
-
-            try:
-                # Формируем имя пользователя
-                user_name = ''
-                if customer_info:
-                    user_name = f"{customer_info.get('first_name', '')} {customer_info.get('last_name', '')}".strip()
-
-                if not user_name:
-                    user_name = f"{user_data.get('first_name', '')} {user_data.get('last_name', '')}".strip()
-
-                # Создаем заказ
-                order = Order.objects.create(
-                    user_id=user_id,
-                    shipping_address=shipping_address,
-                    user_email=customer_info.get('email') or user_data.get('email', ''),
-                    user_name=user_name,
-                    total_amount=cart_data['total_amount']
+            for item in cart_data['items']:
+                order_item = OrderItem.objects.create(
+                    order=order,
+                    product_id=item['product_id'],
+                    product_name=item['product_name'],
+                    quantity=item['quantity'],
+                    price=item['price']
                 )
 
-                logger.info(f"Created order {order.id} for user {user_id}")
-
-                # Создаем позиции заказа
-                order_items = []
-                for cart_item in cart_data['items']:
-                    order_item = OrderItem.objects.create(
-                        order=order,
-                        product_id=cart_item['product_id'],
-                        product_name=cart_item['product_name'],
-                        quantity=cart_item['quantity'],
-                        price=cart_item['price']
-                    )
-                    order_items.append({
-                        'product_id': order_item.product_id,
-                        'quantity': order_item.quantity,
-                        'product_name': order_item.product_name,
-                        'price': str(order_item.price)
-                    })
-
-                # Добавляем специальные инструкции как комментарий
-                if special_instructions:
-                    order.shipping_address += f"\n\nSpecial Instructions: {special_instructions}"
-                    order.save()
-
-                # Публикуем событие о создании заказа
-                event_bus.publish_event('order.created', {
-                    'order_id': order.id,
-                    'user_id': order.user_id,
-                    'total_amount': str(order.total_amount),
-                    'items': order_items,
-                    'customer_info': customer_info
+                order_items.append({
+                    'product_id': order_item.product_id,
+                    'quantity': order_item.quantity,
+                    'product_name': order_item.product_name,
+                    'price': str(order_item.price)
                 })
 
-                logger.info(f"Order {order.id} created successfully for user {user_id}")
+        event_bus.publish_event('order.created', {
+            'order_id': order.id,
+            'user_id': order.user_id,
+            'total_amount': str(order.total_amount),
+            'items': order_items,
+            'customer_info': customer_info
+        })
 
-                return Response(
-                    OrderSerializer(order).data,
-                    status=status.HTTP_201_CREATED
-                )
+        logger.info(f"Order {order.id} created successfully")
 
-            except Exception as e:
-                # Если создание заказа не удалось, освобождаем товары
-                logger.error(f"Failed to create order, releasing products: {e}")
-                ProductService.release_products(items_to_reserve)
-                raise
+        return Response(
+            OrderSerializer(order).data,
+            status=status.HTTP_201_CREATED
+        )
 
     except Exception as e:
         logger.error(f"Error creating order: {e}")
         return Response({
             'error': 'Failed to create order',
-            'details': str(e) if request.user_id else 'Please try again'
+            'details': str(e)
         }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 @api_view(['PUT'])

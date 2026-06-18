@@ -11,7 +11,7 @@ class JWTAuthenticationMiddleware:
     def __call__(self,request):
         #Проверяем токен только для админских операций
         if request.method in ['POST','PUT','PATCH','DELETE'] and '/admin/' not in request.path:
-            auth_header = request.header.get('Authorization')
+            auth_header = request.headers.get('Authorization')
             if auth_header and auth_header.startswith('Bearer '):
                 token = auth_header.split(' ')[1]
                 pass

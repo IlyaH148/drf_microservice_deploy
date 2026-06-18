@@ -45,13 +45,3 @@ class Product(models.Model):
     @property
     def is_in_stock(self):
         return self.stock_quantity> 0
-    
-    def reserve_quantity(self, quantity):
-        if self.stock_quantity >= quantity:
-            self.stock_quantity -=quantity
-            self.save()
-        return False
-    
-    def realise_quantity(self, quantity):
-        self.stock_quantity += quantity
-        self.save()

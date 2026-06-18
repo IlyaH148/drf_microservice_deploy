@@ -158,7 +158,7 @@
                       Updating...
                     </span>
                     <span v-else>
-                      Subtotal: ${{ formatPrice(item.subtotal) }}
+                      Subtotal: ${{ formatPrice((Number(item.price) || 0) * (Number(item.quantity) || 0)) }}
                     </span>
                   </div>
                 </div>

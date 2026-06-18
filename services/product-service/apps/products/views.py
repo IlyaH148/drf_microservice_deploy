@@ -1,3 +1,5 @@
+from urllib import request
+
 from rest_framework import generics,filters ,status
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
@@ -72,64 +74,8 @@ from .models import Product
 
 @api_view(['POST'])
 def reserve_product(request, product_id):
-    try:
-        product = Product.objects.get(id=product_id)
-    except Product.DoesNotExist:
-        return Response(
-            {'success': False, 'message': 'Product not found'},
-            status=status.HTTP_404_NOT_FOUND
-        )
-        
-    raw_quantity = request.data.get('quantity')
-
-    if raw_quantity is None:
-        return Response(
-            {'success': False, 'message': 'Field "quantity" is required'},
-            status=status.HTTP_400_BAD_REQUEST
-        )
-
-    try:
-        quantity = int(raw_quantity)
-        if quantity <= 0:
-            raise ValueError("Quantity must be a positive integer")
-    except (TypeError, ValueError):
-        return Response(
-            {
-                'success': False,
-                'message': 'Invalid "quantity": must be a positive integer',
-                'received': raw_quantity
-            },
-            status=status.HTTP_400_BAD_REQUEST
-        )
-
-    try:
-        reserved = product.reserve_quantity(quantity)
-    except Exception as e:
-        return Response(
-            {
-                'success': False,
-                'message': 'Failed to reserve product due to an internal error',
-                'details': str(e)
-            },
-            status=status.HTTP_500_INTERNAL_SERVER_ERROR
-        )
-
-    if not reserved:
-        return Response(
-            {
-                'success': False,
-                'message': 'Insufficient stock',
-                'available_stock': product.stock_quantity,
-                'requested_quantity': quantity
-            },
-            status=status.HTTP_400_BAD_REQUEST
-        )
-
-    return Response({
-        'success': True,
-        'message': f'Reserved {quantity} units of {product.name}',
-        'remaining_stock': product.stock_quantity
-    })
+    print("🔥 RAW REQUEST:", request.data)
+    print("🔥 PRODUCT ID:", product_id)
     
 @api_view(['POST'])
 def release_product(request, product_id):
@@ -155,8 +101,8 @@ def release_product(request, product_id):
 def check_availability(request, product_id):
     """Проверка наличия товара"""
     try:
-        product = Product.objects.get(id=product_id)
-        quantity = int(request.query_params.get('quantity', 1))
+        product = Product.objects.get(id=product_id)   
+        quantity = int(request.data.get('quantity', 1))
 
         return Response({
             'product_id': product.id,

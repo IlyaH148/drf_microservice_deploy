@@ -120,7 +120,7 @@
                     </div>
                   </div>
                   <p class="text-sm font-medium text-black">
-                    ${{ formatPrice(item.subtotal) }}
+                    ${{ formatPrice((Number(item.price) || 0) * (Number(item.quantity) || 0)) }}
                   </p>
                 </div>
               </div>
