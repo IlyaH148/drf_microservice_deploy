@@ -1,10 +1,10 @@
 // frontend/src/services/api.js
-import axios from 'axios'
-import { useAuthStore } from '../store/auth'
+import axios from 'axios';
+import { useAuthStore } from '../store/auth';
 
 // Create axios instance
 const api = axios.create({
-  baseURL: '/api',
+  baseURL: 'http://localhost:8000/api/',
   timeout: 30000,
   headers: {
     'Content-Type': 'application/json'

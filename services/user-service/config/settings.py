@@ -7,8 +7,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 SECRET_KEY = 'django-insecure-GlhON2oU63zWC39XehA6-BICqBfjy_p04dhbGjrgWPc'
 DEBUG = True
-ALLOWED_HOSTS = ['localhost', '127.0.0.1', '0.0.0.0']
-
+ALLOWED_HOSTS = ['*']
 DJANGO_APPS = [
     'django.contrib.admin',
     'django.contrib.auth',
@@ -63,7 +62,7 @@ TEMPLATES = [
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR.parent.parent / 'databases' / 'user.db',
+        'NAME': BASE_DIR / 'databases' / 'user.db',
     }
 }
 
@@ -92,14 +91,16 @@ AUTH_USER_MODEL = 'users.User'
 
 # CORS Settings - Исправленные настройки
 CORS_ALLOWED_ORIGINS = [
-    "http://localhost:3000",
-    "http://127.0.0.1:3000",
-    "http://localhost:8000",
-    "http://127.0.0.1:8000",
+    "http://localhost",
+    "http://127.0.0.1",
+    "http://localhost:80",
+    "http://127.0.0.1:80",
 ]
 
-# CORS_ALLOW_ALL_ORIGINS = True  # Для разработки
+CORS_ALLOW_ALL_ORIGINS = True  
 CORS_ALLOW_CREDENTIALS = True
+
+
 
 # Дополнительные CORS настройки
 CORS_ALLOW_HEADERS = [

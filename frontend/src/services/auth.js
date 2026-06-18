@@ -2,11 +2,17 @@ import api from './api'
 
 const authService = {
   async login(credentials) {
-    return await api.post('/auth/login/', credentials)
+  // Маппим email -> username только здесь.
+  // Бэкенд продолжает думать, что это username, но внутри это email.
+  const payload = {
+    username: credentials.email, 
+    password: credentials.password,
+  }
+  return await api.post('/auth/login/', payload)
   },
 
   async register(userData) {
-    return await api.post('/users/register/', userData)
+    return await api.post('users/register/', userData)
   },
 
   async refreshToken(refresh) {

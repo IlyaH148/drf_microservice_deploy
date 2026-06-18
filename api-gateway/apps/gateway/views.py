@@ -72,8 +72,8 @@ class ProxyView(View):
 
             # Копируем важные заголовки
             important_headers = [
-                'Authorization', 'Content-Type', 'Accept', 'User-Agent',
-                'Accept-Language', 'Accept-Encoding'
+            'Authorization', 'Content-Type', 'Accept', 'User-Agent',
+            'Accept-Language', 'Accept-Encoding'
             ]
 
             for header_name in important_headers:

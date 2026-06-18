@@ -74,13 +74,6 @@ class ProductService:
         except requests.exceptions.RequestException as e:
             logger.error(f"Failed to reserve products: {e}")
             return False
-        return Response(
-        {
-            'success': False,
-            'message': 'Unhandled reservation state'
-        },
-        status=500
-)
 
     @staticmethod
     def release_products(items: List[Dict]):

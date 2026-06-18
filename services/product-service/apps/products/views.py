@@ -74,8 +74,28 @@ from .models import Product
 
 @api_view(['POST'])
 def reserve_product(request, product_id):
-    print("🔥 RAW REQUEST:", request.data)
-    print("🔥 PRODUCT ID:", product_id)
+    try:
+        product = Product.objects.get(id=product_id)
+        quantity = int(request.data.get('quantity', 1))
+
+        product.reserve_quantity(quantity)  # бросит ValueError если не хватает
+        return Response({
+            'success': True,
+            'message': f'Reserved {quantity} units of {product.name}',
+            'current_stock': product.stock_quantity
+        })
+
+    except ValueError as e:
+        return Response({
+            'success': False,
+            'message': str(e)
+        }, status=status.HTTP_400_BAD_REQUEST)
+
+    except Product.DoesNotExist:
+        return Response({
+            'success': False,
+            'message': 'Product not found'
+        }, status=status.HTTP_404_NOT_FOUND)
     
 @api_view(['POST'])
 def release_product(request, product_id):

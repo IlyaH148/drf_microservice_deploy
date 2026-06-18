@@ -6,8 +6,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 SECRET_KEY = 'django-insecure-hsgni0ElA882d24d3RDOU6h-8OiAnsWItDG0Fxz-1wI'
 DEBUG = True
-ALLOWED_HOSTS = ['localhost', '127.0.0.1', '0.0.0.0']
-
+ALLOWED_HOSTS = ['*']
 DJANGO_APPS = [
     'django.contrib.admin',
     'django.contrib.auth',
@@ -61,7 +60,7 @@ TEMPLATES = [
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR.parent.parent / 'databases' / 'order.db',
+        'NAME': BASE_DIR / 'databases' / 'order.db',
     }
 }
 
@@ -78,13 +77,13 @@ REST_FRAMEWORK = {
 }
 
 CORS_ALLOWED_ORIGINS = [
-    "http://localhost:3000",
-    "http://127.0.0.1:3000",
-    "http://localhost:8000",
-    "http://127.0.0.1:8000",
+    "http://localhost",
+    "http://127.0.0.1",
+    "http://localhost:80",
+    "http://127.0.0.1:80",
 ]
 
-# CORS_ALLOW_ALL_ORIGINS = True
+CORS_ALLOW_ALL_ORIGINS = True
 
 LANGUAGE_CODE = 'en-us'
 TIME_ZONE = 'UTC'
@@ -95,11 +94,13 @@ STATIC_URL = 'static/'
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 # Service URLs
-PRODUCT_SERVICE_URL = 'http://localhost:8001'
-CART_SERVICE_URL = 'http://localhost:8002'
-USER_SERVICE_URL = 'http://localhost:8004'
+PRODUCT_SERVICE_URL = os.environ.get('PRODUCT_SERVICE_URL', 'http://product-service:8000')
+CART_SERVICE_URL = os.environ.get('CART_SERVICE_URL', 'http://cart-service:8000')
+USER_SERVICE_URL = os.environ.get('USER_SERVICE_URL', 'http://user-service:8000')
+
+
 
 # Redis settings
-REDIS_HOST = 'localhost'
+REDIS_HOST = os.environ.get('REDIS_HOST', 'shop-redis')
 REDIS_PORT = 6379
 REDIS_DB = 0

@@ -45,3 +45,15 @@ class Product(models.Model):
     @property
     def is_in_stock(self):
         return self.stock_quantity> 0
+    
+    def reserve_quantity(self, quantity):
+        """Резервирование товара — уменьшает stock_quantity"""
+        if self.stock_quantity < quantity:
+            raise ValueError(f'Not enough stock. Available: {self.stock_quantity}')
+        self.stock_quantity -= quantity
+        self.save(update_fields=['stock_quantity'])
+
+    def release_quantity(self, quantity):
+        """Освобождение резерва — возвращает stock_quantity"""
+        self.stock_quantity += quantity
+        self.save(update_fields=['stock_quantity'])

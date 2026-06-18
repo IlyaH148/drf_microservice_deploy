@@ -4,7 +4,7 @@ import requests
 from datetime import datetime
 from typing import Dict, Any, Optional
 import logging
-
+import os
 logger = logging.getLogger(__name__)
 
 # Redis клиент для межсервисного взаимодействия
@@ -45,11 +45,11 @@ class ServiceCommunication:
     """Класс для HTTP взаимодействия между сервисами"""
 
     BASE_URLS = {
-        'user-service': 'http://localhost:8004',
-        'product-service': 'http://localhost:8001',
-        'cart-service': 'http://localhost:8002',
-        'order-service': 'http://localhost:8003'
-    }
+    'user-service': os.getenv('USER_SERVICE_URL', 'http://localhost:8004'),
+    'product-service': os.getenv('PRODUCT_SERVICE_URL', 'http://localhost:8001'),
+    'cart-service': os.getenv('CART_SERVICE_URL', 'http://localhost:8002'),
+    'order-service': os.getenv('ORDER_SERVICE_URL', 'http://localhost:8003')
+}
 
     @classmethod
     def make_request(cls, service: str, endpoint: str, method: str = 'GET',

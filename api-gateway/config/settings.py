@@ -6,7 +6,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 SECRET_KEY = 'django-insecure-OvH5qCFXy_-vmC4bXkbLt3sFM42uEPT7Smq7hXIMVu8'
 DEBUG = True
-ALLOWED_HOSTS = ['localhost', '127.0.0.1', '0.0.0.0']
+ALLOWED_HOSTS = ['*']
 
 DJANGO_APPS = [
     'django.contrib.admin',
@@ -61,7 +61,7 @@ TEMPLATES = [
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR.parent / 'databases' / 'gateway.db',
+        'NAME': BASE_DIR / 'databases' / 'gateway.db',
     }
 }
 
@@ -75,12 +75,16 @@ REST_FRAMEWORK = {
 }
 
 CORS_ALLOWED_ORIGINS = [
-    "http://localhost:3000",
-    "http://127.0.0.1:3000",
+    "http://localhost",
+    "http://127.0.0.1",
+    "http://localhost:80",
+    "http://127.0.0.1:80",
 ]
 
-# CORS_ALLOW_ALL_ORIGINS = True
+CORS_ALLOW_ALL_ORIGINS = True
 CORS_ALLOW_CREDENTIALS = True
+
+
 
 LANGUAGE_CODE = 'en-us'
 TIME_ZONE = 'UTC'
@@ -92,10 +96,10 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 # Service URLs
 MICROSERVICES = {
-    'user-service': 'http://localhost:8004',
-    'product-service': 'http://localhost:8001',
-    'cart-service': 'http://localhost:8002',
-    'order-service': 'http://localhost:8003',
+    'user-service': os.environ.get('USER_SERVICE_URL', 'http://user-service:8000'),
+    'product-service': os.environ.get('PRODUCT_SERVICE_URL', 'http://product-service:8000'),
+    'cart-service': os.environ.get('CART_SERVICE_URL', 'http://cart-service:8000'),
+    'order-service': os.environ.get('ORDER_SERVICE_URL', 'http://order-service:8000'),
 }
 
 # Rate limiting settings
